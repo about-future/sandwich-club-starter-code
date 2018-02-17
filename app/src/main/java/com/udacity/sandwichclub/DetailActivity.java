@@ -20,47 +20,78 @@ public class DetailActivity extends AppCompatActivity {
     public static final String EXTRA_POSITION = "extra_position";
     private static final int DEFAULT_POSITION = -1;
 
+    private static final String SANDWICH_NAME = "name";
+    private static final String SANDWICH_IMAGE_URL = "image";
+    private static final String SANDWICH_ORIGIN = "origin";
+    private static final String SANDWICH_AKA = "also_known_as";
+    private static final String SANDWICH_DESCRIPTION = "description";
+    private static final String SANDWICH_INGREDIENTS = "ingredients";
+
+    private String mImageUrl;
+    private TextView mOriginTv;
+    private TextView mAlsoKnownTv;
+    private TextView mDescriptionTv;
+    private TextView mIngredientsTv;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_detail);
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
 
-        ImageView ingredientsIv = findViewById(R.id.image_iv);
+        ImageView sandwichIv = findViewById(R.id.image_iv);
+        mOriginTv = findViewById(R.id.origin_tv);
+        mAlsoKnownTv = findViewById(R.id.also_known_tv);
+        mDescriptionTv = findViewById(R.id.description_tv);
+        mIngredientsTv = findViewById(R.id.ingredients_tv);
 
-        Intent intent = getIntent();
-        if (intent == null) {
-            closeOnError();
-        }
+        // If the saveInstanceState bundle is not NULL, populate all fields in the layout
+        // accordingly with the saved data.
+        if (savedInstanceState != null) {
+            setTitle(savedInstanceState.getString(SANDWICH_NAME));
+            mImageUrl = savedInstanceState.getString(SANDWICH_IMAGE_URL);
+            Picasso.with(this)
+                    .load(mImageUrl)
+                    .into(sandwichIv);
+            mOriginTv.setText(savedInstanceState.getString(SANDWICH_ORIGIN));
+            mAlsoKnownTv.setText(savedInstanceState.getString(SANDWICH_AKA));
+            mDescriptionTv.setText(savedInstanceState.getString(SANDWICH_DESCRIPTION));
+            mIngredientsTv.setText(savedInstanceState.getString(SANDWICH_INGREDIENTS));
+        } else {
+            Intent intent = getIntent();
+            if (intent == null) {
+                closeOnError();
+            }
 
-        int position = intent.getIntExtra(EXTRA_POSITION, DEFAULT_POSITION);
-        if (position == DEFAULT_POSITION) {
-            // EXTRA_POSITION not found in intent
-            closeOnError();
-            return;
-        }
-
-        String[] sandwiches = getResources().getStringArray(R.array.sandwich_details);
-        String json = sandwiches[position];
-
-        try {
-            Sandwich sandwich = JsonUtils.parseSandwichJson(json);
-            if (sandwich == null) {
-                // Sandwich data unavailable
+            int position = intent.getIntExtra(EXTRA_POSITION, DEFAULT_POSITION);
+            if (position == DEFAULT_POSITION) {
+                // EXTRA_POSITION not found in intent
                 closeOnError();
                 return;
             }
 
-            populateUI(sandwich);
-            Picasso.with(this)
-                    .load(sandwich.getImage())
-                    .into(ingredientsIv);
+            String[] sandwiches = getResources().getStringArray(R.array.sandwich_details);
+            String json = sandwiches[position];
 
-            setTitle(sandwich.getMainName());
-        } catch (JSONException e) {
-            e.printStackTrace();
+            try {
+                Sandwich sandwich = JsonUtils.parseSandwichJson(json);
+                if (sandwich == null) {
+                    // Sandwich data unavailable
+                    closeOnError();
+                    return;
+                }
+
+                populateUI(sandwich);
+                mImageUrl = sandwich.getImage();
+                Picasso.with(this)
+                        .load(mImageUrl)
+                        .into(sandwichIv);
+
+                setTitle(sandwich.getMainName());
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
         }
-
     }
 
     @Override
@@ -81,10 +112,9 @@ public class DetailActivity extends AppCompatActivity {
     }
 
     private void populateUI(Sandwich sandwich) {
-        TextView originTv = (TextView) findViewById(R.id.origin_tv);
-        originTv.setText(sandwich.getPlaceOfOrigin());
 
-        TextView alsoKnownTv = (TextView) findViewById(R.id.also_known_tv);
+        mOriginTv.setText(sandwich.getPlaceOfOrigin());
+
         StringBuilder alsoKnownList = new StringBuilder();
         for (int i = 0; i < sandwich.getAlsoKnownAs().size(); i++) {
             alsoKnownList.append(sandwich.getAlsoKnownAs().get(i));
@@ -94,19 +124,30 @@ public class DetailActivity extends AppCompatActivity {
                 alsoKnownList.append(", ");
             }
         }
-        alsoKnownTv.setText(alsoKnownList);
+        mAlsoKnownTv.setText(alsoKnownList);
 
-        TextView descriptionTv = (TextView) findViewById(R.id.description_tv);
-        descriptionTv.setText(sandwich.getDescription());
+        mDescriptionTv.setText(sandwich.getDescription());
 
-        TextView ingredientsTv = (TextView) findViewById(R.id.ingredients_tv);
         for (int i = 0; i < sandwich.getIngredients().size(); i++) {
-            ingredientsTv.append(sandwich.getIngredients().get(i));
+            mIngredientsTv.append(sandwich.getIngredients().get(i));
             // We add the coma only if the position of the appended String is not the last one
             // in the Ingredients List<String>
             if (i < sandwich.getIngredients().size() - 1) {
-                ingredientsTv.append(", ");
+                mIngredientsTv.append(", ");
             }
         }
+    }
+
+    @Override
+    protected void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
+
+        // Put the contents of the Views into the outState Bundle.
+        outState.putString(SANDWICH_NAME, getTitle().toString());
+        outState.putString(SANDWICH_IMAGE_URL, mImageUrl);
+        outState.putString(SANDWICH_ORIGIN, mOriginTv.getText().toString());
+        outState.putString(SANDWICH_AKA, mAlsoKnownTv.getText().toString());
+        outState.putString(SANDWICH_DESCRIPTION, mDescriptionTv.getText().toString());
+        outState.putString(SANDWICH_INGREDIENTS, mIngredientsTv.getText().toString());
     }
 }
