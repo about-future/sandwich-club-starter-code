@@ -2,13 +2,18 @@ package com.udacity.sandwichclub;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.support.v4.app.NavUtils;
 import android.support.v7.app.AppCompatActivity;
+import android.view.MenuItem;
 import android.widget.ImageView;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.squareup.picasso.Picasso;
 import com.udacity.sandwichclub.model.Sandwich;
 import com.udacity.sandwichclub.utils.JsonUtils;
+
+import org.json.JSONException;
 
 public class DetailActivity extends AppCompatActivity {
 
@@ -19,6 +24,7 @@ public class DetailActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_detail);
+        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
 
         ImageView ingredientsIv = findViewById(R.id.image_iv);
 
@@ -36,19 +42,37 @@ public class DetailActivity extends AppCompatActivity {
 
         String[] sandwiches = getResources().getStringArray(R.array.sandwich_details);
         String json = sandwiches[position];
-        Sandwich sandwich = JsonUtils.parseSandwichJson(json);
-        if (sandwich == null) {
-            // Sandwich data unavailable
-            closeOnError();
-            return;
+
+        try {
+            Sandwich sandwich = JsonUtils.parseSandwichJson(json);
+            if (sandwich == null) {
+                // Sandwich data unavailable
+                closeOnError();
+                return;
+            }
+
+            populateUI(sandwich);
+            Picasso.with(this)
+                    .load(sandwich.getImage())
+                    .into(ingredientsIv);
+
+            setTitle(sandwich.getMainName());
+        } catch (JSONException e) {
+            e.printStackTrace();
         }
 
-        populateUI();
-        Picasso.with(this)
-                .load(sandwich.getImage())
-                .into(ingredientsIv);
+    }
 
-        setTitle(sandwich.getMainName());
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        int id = item.getItemId();
+        if (id == android.R.id.home) {
+            //NavUtils.navigateUpFromSameTask(this);
+            onBackPressed();
+            return true;
+        }
+
+        return super.onOptionsItemSelected(item);
     }
 
     private void closeOnError() {
@@ -56,7 +80,33 @@ public class DetailActivity extends AppCompatActivity {
         Toast.makeText(this, R.string.detail_error_message, Toast.LENGTH_SHORT).show();
     }
 
-    private void populateUI() {
+    private void populateUI(Sandwich sandwich) {
+        TextView originTv = (TextView) findViewById(R.id.origin_tv);
+        originTv.setText(sandwich.getPlaceOfOrigin());
 
+        TextView alsoKnownTv = (TextView) findViewById(R.id.also_known_tv);
+        StringBuilder alsoKnownList = new StringBuilder();
+        for (int i = 0; i < sandwich.getAlsoKnownAs().size(); i++) {
+            alsoKnownList.append(sandwich.getAlsoKnownAs().get(i));
+            // We add the coma only if the position of the appended String is not the last one
+            // in the Ingredients List<String>
+            if (i < sandwich.getAlsoKnownAs().size() - 1) {
+                alsoKnownList.append(", ");
+            }
+        }
+        alsoKnownTv.setText(alsoKnownList);
+
+        TextView descriptionTv = (TextView) findViewById(R.id.description_tv);
+        descriptionTv.setText(sandwich.getDescription());
+
+        TextView ingredientsTv = (TextView) findViewById(R.id.ingredients_tv);
+        for (int i = 0; i < sandwich.getIngredients().size(); i++) {
+            ingredientsTv.append(sandwich.getIngredients().get(i));
+            // We add the coma only if the position of the appended String is not the last one
+            // in the Ingredients List<String>
+            if (i < sandwich.getIngredients().size() - 1) {
+                ingredientsTv.append(", ");
+            }
+        }
     }
 }
