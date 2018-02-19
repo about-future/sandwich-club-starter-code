@@ -4,6 +4,8 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.support.v4.app.NavUtils;
 import android.support.v7.app.AppCompatActivity;
+import android.text.TextUtils;
+import android.util.Log;
 import android.view.MenuItem;
 import android.widget.ImageView;
 import android.widget.TextView;
@@ -89,7 +91,7 @@ public class DetailActivity extends AppCompatActivity {
 
                 setTitle(sandwich.getMainName());
             } catch (JSONException e) {
-                e.printStackTrace();
+                Log.e("DetailActivity.java", "Error parsing Sandwich JSON: ", e);
             }
         }
     }
@@ -98,7 +100,6 @@ public class DetailActivity extends AppCompatActivity {
     public boolean onOptionsItemSelected(MenuItem item) {
         int id = item.getItemId();
         if (id == android.R.id.home) {
-            //NavUtils.navigateUpFromSameTask(this);
             onBackPressed();
             return true;
         }
@@ -112,30 +113,10 @@ public class DetailActivity extends AppCompatActivity {
     }
 
     private void populateUI(Sandwich sandwich) {
-
         mOriginTv.setText(sandwich.getPlaceOfOrigin());
-
-        StringBuilder alsoKnownList = new StringBuilder();
-        for (int i = 0; i < sandwich.getAlsoKnownAs().size(); i++) {
-            alsoKnownList.append(sandwich.getAlsoKnownAs().get(i));
-            // We add the coma only if the position of the appended String is not the last one
-            // in the Ingredients List<String>
-            if (i < sandwich.getAlsoKnownAs().size() - 1) {
-                alsoKnownList.append(", ");
-            }
-        }
-        mAlsoKnownTv.setText(alsoKnownList);
-
+        mAlsoKnownTv.setText(TextUtils.join(", ", sandwich.getAlsoKnownAs()));
         mDescriptionTv.setText(sandwich.getDescription());
-
-        for (int i = 0; i < sandwich.getIngredients().size(); i++) {
-            mIngredientsTv.append(sandwich.getIngredients().get(i));
-            // We add the coma only if the position of the appended String is not the last one
-            // in the Ingredients List<String>
-            if (i < sandwich.getIngredients().size() - 1) {
-                mIngredientsTv.append(", ");
-            }
-        }
+        mIngredientsTv.setText(TextUtils.join(", ", sandwich.getIngredients()));
     }
 
     @Override

@@ -9,40 +9,40 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class JsonUtils {
+    private static final String NAME = "name";
+    private static final String MAIN_NAME = "mainName";
+    private static final String AKA = "alsoKnownAs";
+    private static final String ORIGIN = "placeOfOrigin";
+    private static final String DESCRIPTION = "description";
+    private static final String IMAGE = "image";
+    private static final String INGREDIENTS = "ingredients";
 
     public static Sandwich parseSandwichJson(String json) throws JSONException {
-        // Instantiate a JSON object and a Sandwich object so we can get and set data.
+        // Instantiate a JSON object so we can get data.
         JSONObject sandwichJson = new JSONObject(json);
-        Sandwich sandwich = new Sandwich();
+        JSONObject sandwichNameObject = sandwichJson.getJSONObject(NAME);
 
-        JSONObject sandwichNameObject = sandwichJson.getJSONObject("name");
-        //Get the main name of the sandwich from JSON and set it for sandwich object.
-        sandwich.setMainName(sandwichNameObject.getString("mainName"));
-
-        JSONArray alsoKnownJsonArray = sandwichNameObject.getJSONArray("alsoKnownAs");
-        // Create an instance of List<String>, populate it with aka names and set it
-        // in our sandwich object.
+        JSONArray alsoKnownJsonArray = sandwichNameObject.getJSONArray(AKA);
+        // Create an instance of List<String>, populate it with aka names.
         List<String> alsoKnownAs = new ArrayList<>();
         for (int i = 0; i < alsoKnownJsonArray.length(); i++) {
             alsoKnownAs.add(alsoKnownJsonArray.getString(i));
         }
-        sandwich.setAlsoKnownAs(alsoKnownAs);
 
-        //Get the place of origin, description and image url of the sandwich from JSON and
-        // set them in the sandwich object.
-        sandwich.setPlaceOfOrigin(sandwichJson.getString("placeOfOrigin"));
-        sandwich.setDescription(sandwichJson.getString("description"));
-        sandwich.setImage(sandwichJson.getString("image"));
-
-        JSONArray ingredientsJsonArray = sandwichJson.getJSONArray("ingredients");
-        // Create an instance of List<String>, populate it with ingredients and set it
-        // in our sandwich object.
+        JSONArray ingredientsJsonArray = sandwichJson.getJSONArray(INGREDIENTS);
+        // Create an instance of List<String>, populate it with ingredients.
         List<String> ingredients = new ArrayList<>();
         for (int i = 0; i < ingredientsJsonArray.length(); i++) {
             ingredients.add(ingredientsJsonArray.getString(i));
         }
-        sandwich.setIngredients(ingredients);
 
-        return sandwich;
+        return new Sandwich(
+                sandwichNameObject.getString(MAIN_NAME),
+                alsoKnownAs,
+                sandwichJson.getString(ORIGIN),
+                sandwichJson.getString(DESCRIPTION),
+                sandwichJson.getString(IMAGE),
+                ingredients
+        );
     }
 }
